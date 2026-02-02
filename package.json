@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/kumarahhc/GoogleReviewManager#readme",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "googleapis": "^170.0.0"
   }
 }

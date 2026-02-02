@@ -6,7 +6,7 @@ const url=require('url');
 const { exec } = require('child_process');
 
 const {google}=require('googleapis');
-
+//client secret file can be downloaded from Google Cloud Console (https://console.cloud.google.com/apis/credentials)
 const KeyPath=path.join(__dirname,'client_secret_474559652281-g1vft502se5nj60aacgqohaevp8gsock.apps.googleusercontent.com.json');
 const TokenPath=path.join(__dirname,'token.json');
 
@@ -212,6 +212,6 @@ async function listReviewsREST(accountId, locationId) {
         ]);
     }
   await listAccounts();
-  await listLocationsPersonalREST('105630014004423132083');
-  listReviewsREST('105630014004423132083', '8845301734090568743');
+  //await listLocationsPersonalREST('accountId'); //personal account ID
+  //listReviewsREST('accountId', 'locationId'); //personal account ID, location ID
 })();

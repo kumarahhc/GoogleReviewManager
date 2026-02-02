@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs=require('fs');
 const path=require('path');
 const http=require('http');
@@ -9,6 +10,9 @@ const {google}=require('googleapis');
 //client secret file can be downloaded from Google Cloud Console (https://console.cloud.google.com/apis/credentials)
 const KeyPath=path.join(__dirname,'client_secret_474559652281-g1vft502se5nj60aacgqohaevp8gsock.apps.googleusercontent.com.json');
 const TokenPath=path.join(__dirname,'token.json');
+
+const accountId = process.env.ACCOUNT_ID;
+const locationId = process.env.LOCATION_ID;
 
 let keys;
 
@@ -98,62 +102,6 @@ async function listLocations(accountId) {
     // locations/9876543210987654321
   });
 }
-async function listLocationsPersonal(accountId) {
-  console.log('Searching locations for PERSONAL account');
-
-  const businessInfo = google.mybusinessbusinessinformation({
-    version: 'v1',
-    auth: oauth2Client,
-  });
-
-  const res = await businessInfo.accounts.locations.search({
-    parent: `accounts/${accountId}`,
-    pageSize: 100,
-    readMask: 'name,title',
-  });
-
-  if (!res.data.locations || res.data.locations.length === 0) {
-    console.log('No locations found.');
-    return;
-  }
-
-  res.data.locations.forEach(loc => {
-    console.log(loc.name, '-', loc.title);
-    // Example:
-    // accounts/105630014004423132083/locations/1234567890123456789
-  });
-}
-async function listLocationsPersonalLegacy(accountId) {
-  console.log('Listing locations using LEGACY v4 API');
-
-  const mybusiness = google.mybusiness({
-    version: 'v4',
-    auth: oauth2Client,
-  });
-
-  const res = await mybusiness.accounts.locations.list({
-    parent: `accounts/${accountId}`,
-    pageSize: 100,
-  });
-
-  if (!res.data.locations || res.data.locations.length === 0) {
-    console.log('No locations found.');
-    return;
-  }
-
-  res.data.locations.forEach(loc => {
-    console.log(loc.name, '-', loc.locationName);
-    // Example:
-    // accounts/105630014004423132083/locations/1234567890123456789
-  });
-}
-async function listReviews(accountId, locationId) {
-  const res = await google.mybusinessreviews('v1').accounts.locations.reviews.list({
-    parent: `accounts/${accountId}/locations/${locationId}`
-  });
-
-  console.log(res.data.reviews);
-}
 
 async function authedRequest(url) {
   const token = await oauth2Client.getAccessToken();
@@ -208,8 +156,32 @@ async function listReviewsREST(accountId, locationId) {
     );
   });
 }
-
-
+//Review data structure reference:
+//https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews#Review
+/*
+Review:
+{
+  "name": string,
+  "reviewId": string,
+  "reviewer": {
+    object (Reviewer)
+  },
+  "starRating": enum (StarRating),
+  "comment": string,
+  "createTime": string,
+  "updateTime": string,
+  "reviewReply": {
+    object (ReviewReply)
+  }
+}
+----- 
+Reviewer:
+{
+  "profilePhotoUrl": string,
+  "displayName": string,
+  "isAnonymous": boolean
+}
+*/
 (async () => {
     if (fs.existsSync(TokenPath)) {
         const token = JSON.parse(fs.readFileSync(TokenPath));
@@ -219,7 +191,12 @@ async function listReviewsREST(accountId, locationId) {
             'https://www.googleapis.com/auth/business.manage'
         ]);
     }
-  await listAccounts();
-  await listLocationsPersonalREST('105630014004423132083');
-  listReviewsREST('105630014004423132083', '8845301734090568743');
+    console.log('Account ID:', accountId);
+    console.log('Location ID:', locationId);
+    if (!accountId || !locationId) {
+    throw new Error('ACCOUNT_ID or LOCATION_ID not set in .env');
+    }
+    //await listAccounts();
+    //await listLocationsPersonalREST(accountId); //personal account ID
+    listReviewsREST(accountId, locationId); //personal account ID, location ID
 })();
